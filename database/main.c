@@ -1,6 +1,6 @@
-#include "cstdio"
-#include "cstdlib"
-#include "cstring"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
 
 typedef struct {
     char *buffer;
@@ -9,17 +9,47 @@ typedef struct {
 } InputBuffer;
 
 InputBuffer *new_input_buffer() {
-    auto *input_buffer = (InputBuffer *) malloc(sizeof(InputBuffer));
-    input_buffer->buffer = nullptr;
+    InputBuffer *input_buffer = (InputBuffer *) malloc(sizeof(InputBuffer));
+    input_buffer->buffer = NULL;
     input_buffer->buffer_length = 0;
     input_buffer->input_length = 0;
 
     return input_buffer;
 }
 
-ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+void print_prompt() { printf("db >>  "); }
 
-void print_prompt() { printf("db > "); }
+ssize_t getline(char **lineptr, size_t *n, FILE *stream) {
+    if (lineptr == NULL || n == NULL || stream == NULL) {
+        return -1;
+    }
+
+    int ch;
+    size_t i = 0;
+
+    if (*lineptr == NULL) {
+        *n = 128; // Initial buffer size
+        *lineptr = malloc(*n);
+        if (*lineptr == NULL) {
+            return -1;
+        }
+    }
+
+    while ((ch = fgetc(stream)) != EOF && ch != '\n') {
+        if (i + 1 >= *n) {
+            *n *= 2;
+            char *new_ptr = realloc(*lineptr, *n);
+            if (!new_ptr) return -1;
+            *lineptr = new_ptr;
+        }
+        (*lineptr)[i++] = (char) ch;
+    }
+
+    if (ch == EOF && i == 0) return -1; // No input
+
+    (*lineptr)[i] = '\0'; // Null-terminate string
+    return i;
+}
 
 void read_input(InputBuffer *input_buffer) {
     ssize_t bytes_read =
@@ -28,12 +58,6 @@ void read_input(InputBuffer *input_buffer) {
     if (bytes_read <= 0) {
         printf("Error reading input\n");
         exit(EXIT_FAILURE);
-    }
-
-    // Ignore trailing newline
-    if (input_buffer != nullptr) {
-        input_buffer->input_length = bytes_read - 1;
-        input_buffer->buffer[bytes_read - 1] = 0;
     }
 }
 
