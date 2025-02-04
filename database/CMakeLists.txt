@@ -3,4 +3,5 @@ project(database)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(database main.cpp)
+add_executable(database main.cpp
+        main.cpp)
